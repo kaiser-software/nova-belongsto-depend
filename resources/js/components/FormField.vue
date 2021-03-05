@@ -66,6 +66,7 @@ export default {
             options: [],
             relationModalOpen: false,
             selectedResourceId: null,
+            dependsOnValue: null
         };
     },
 
@@ -120,14 +121,9 @@ export default {
                 });
 
                 if (dependsOnValue && dependsOnValue.value) {
-                    this.options = (
-                        await Nova.request().post("/nova-vendor/nova-belongsto-depend", {
-                            resourceClass: this.field.resourceParentClass,
-                            modelClass: dependsOnValue.field.modelClass,
-                            attribute: this.field.attribute,
-                            dependKey: dependsOnValue.value[dependsOnValue.field.modelPrimaryKey],
-                        })
-                    ).data;
+                    this.dependsOnValue = dependsOnValue;
+
+                    this.loadOptions();
 
                     if (this.field.valueKey) {
                         this.value = this.options.find((item) => item[this.field.modelPrimaryKey] == this.field.valueKey);
@@ -144,6 +140,17 @@ export default {
     methods: {
         customLabel(item) {
             return item[this.field.titleKey];
+        },
+
+        async loadOptions() {
+            this.options = (
+                await Nova.request().post("/nova-vendor/nova-belongsto-depend", {
+                    resourceClass: this.field.resourceParentClass,
+                    modelClass: this.dependsOnValue.field.modelClass,
+                    attribute: this.field.attribute,
+                    dependKey: this.dependsOnValue.value[this.dependsOnValue.field.modelPrimaryKey],
+                })
+            ).data;
         },
 
         /*
@@ -203,10 +210,14 @@ export default {
             this.relationModalOpen = false;
         },
 
-        handleSetResource({ id }) {
+        async handleSetResource({id}) {
             this.closeRelationModal();
+
+            await this.loadOptions();
+
             this.selectedResourceId = id;
-            this.getAvailableResources().then(() => this.selectInitialResource());
+            // this.getAvailableResources().then(() => this.selectInitialResource());
+            this.handleChange(this.options.find(option => id === option.id));
         },
     },
 };
