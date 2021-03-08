@@ -123,7 +123,7 @@ export default {
                 if (dependsOnValue && dependsOnValue.value) {
                     this.dependsOnValue = dependsOnValue;
 
-                    this.loadOptions();
+                    await this.loadOptions();
 
                     if (this.field.valueKey) {
                         this.value = this.options.find((item) => item[this.field.modelPrimaryKey] == this.field.valueKey);
